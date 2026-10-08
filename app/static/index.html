@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bulk Certificate Generator - High Performance PDF Engine</title>
+
+  <!-- Google Fonts: Outfit & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Outfit', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+            display: ['Outfit', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              gold: '#fbbf24',
+              goldHover: '#f59e0b',
+              navy: '#0b1120',
+              navyDark: '#070b14',
+              navyCard: '#111827',
+              accent: '#38bdf8',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-amber-500 selection:text-slate-950">
+
+  <!-- TOP HEADER -->
+  <header class="border-b border-slate-800/80 bg-slate-900/90 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+
+      <!-- Brand & Title -->
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center shadow-lg shadow-amber-500/20">
+          <svg class="w-6 h-6 text-slate-950" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3z M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="font-bold text-lg tracking-tight text-white">CertiPulse</span>
+            <span class="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-amber-400/10 text-amber-300 border border-amber-400/20">v1.0.0</span>
+          </div>
+          <p class="text-xs text-slate-400 hidden sm:block">High-Performance Asynchronous Certificate Engine</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex items-center space-x-1 sm:space-x-2 bg-slate-950/60 p-1 rounded-xl border border-slate-800">
+        <button id="nav-tab-generator" class="px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 flex items-center space-x-2 border bg-amber-500/10 text-amber-300 border-amber-500/30">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+          <span class="hidden md:inline">Create Batch</span>
+        </button>
+        <button id="nav-tab-monitor" class="px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 flex items-center space-x-2 border border-transparent text-slate-400 hover:text-slate-200">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+          <span class="hidden md:inline">Job Monitor</span>
+        </button>
+        <button id="nav-tab-history" class="px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 flex items-center space-x-2 border border-transparent text-slate-400 hover:text-slate-200">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <span class="hidden md:inline">Batch History</span>
+        </button>
+        <button id="nav-tab-verify" class="px-3.5 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 flex items-center space-x-2 border border-transparent text-slate-400 hover:text-slate-200">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+          <span class="hidden md:inline">Verify Credential</span>
+        </button>
+      </nav>
+
+      <!-- Right Meta & API Status -->
+      <div class="flex items-center space-x-3">
+        <div id="server-health-badge" class="hidden sm:flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800">
+          <span id="server-health-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span id="server-health-text" class="text-xs text-emerald-400 font-medium">Checking API...</span>
+        </div>
+        <a href="/docs" target="_blank" class="p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-colors" title="Swagger Interactive API Docs">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN VIEWPORT CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- ========================================== -->
+    <!-- TAB 1: BATCH GENERATOR -->
+    <!-- ========================================== -->
+    <section id="tab-generator" class="space-y-8">
+      <!-- Title & Hero -->
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight font-display">Generate Bulk Certificates</h1>
+          <p class="text-slate-400 text-sm mt-1">Configure your event template, ingest recipient rosters, and generate tamper-evident PDF credentials asynchronously.</p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button type="button" id="load-demo-batch-btn" class="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center space-x-2 transition-all shadow-sm">
+            <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            <span>Load Demo Batch</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Generator Form Container -->
+      <form id="job-form" class="space-y-8">
+
+        <!-- STEP 1: EVENT & ISSUER METADATA -->
+        <div class="glass-panel rounded-2xl p-6 border border-slate-800/80 shadow-xl relative overflow-hidden">
+          <div class="flex items-center space-x-3 mb-5">
+            <span class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 font-bold flex items-center justify-center text-sm border border-amber-500/30">1</span>
+            <h2 class="text-lg font-semibold text-white">Event & Credential Details</h2>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div class="space-y-1.5">
+              <label for="field-title" class="text-xs font-semibold uppercase tracking-wider text-slate-300">Certificate Title <span class="text-amber-400">*</span></label>
+              <input type="text" id="field-title" required value="Certificate of Completion" placeholder="e.g. Certificate of Excellence" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-100 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none transition-colors" />
+            </div>
+
+            <div class="space-y-1.5">
+              <label for="field-event-name" class="text-xs font-semibold uppercase tracking-wider text-slate-300">Event / Program Name <span class="text-amber-400">*</span></label>
+              <input type="text" id="field-event-name" required value="Annual Cloud Architecture Summit" placeholder="e.g. AI Hackathon 2026" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-100 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none transition-colors" />
+            </div>
+
+            <div class="space-y-1.5">
+              <label for="field-issue-date" class="text-xs font-semibold uppercase tracking-wider text-slate-300">Issue Date <span class="text-amber-400">*</span></label>
+              <input type="text" id="field-issue-date" required placeholder="e.g. October 8, 2026" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-100 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none transition-colors" />
+            </div>
+
+            <div class="space-y-1.5">
+              <label for="field-issuer-name" class="text-xs font-semibold uppercase tracking-wider text-slate-300">Issuer / Signatory Name <span class="text-amber-400">*</span></label>
+              <input type="text" id="field-issuer-name" required value="Dr. Agamya Rathour" placeholder="e.g. Jane Doe" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-100 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none transition-colors" />
+            </div>
+
+            <div class="space-y-1.5">
+              <label for="field-issuer-title" class="text-xs font-semibold uppercase tracking-wider text-slate-300">Issuer Title <span class="text-amber-400">*</span></label>
+              <input type="text" id="field-issuer-title" required value="Chief Technology Officer" placeholder="e.g. Program Director" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-100 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none transition-colors" />
+            </div>
+
+            <div class="space-y-1.5">
+              <label for="field-org" class="text-xs font-semibold uppercase tracking-wider text-slate-300">Organization Name</label>
+              <input type="text" id="field-org" value="Global Tech Academy" placeholder="e.g. University Institute" class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-100 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none transition-colors" />
+            </div>
+          </div>
+
+          <div class="mt-4 space-y-1.5">
+            <label for="field-desc" class="text-xs font-semibold uppercase tracking-wider text-slate-300">Recognition Description / Body Text</label>
+            <textarea id="field-desc" rows="2" placeholder="e.g. In recognition of outstanding achievement and demonstrated mastery in distributed backend systems and asynchronous architectures." class="w-full px-3.5 py-2 rounded-xl bg-slate-900/80 border border-slate-700 text-slate-100 text-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none transition-colors">In recognition of successful participation and dedicated commitment to technical excellence in high-performance cloud engineering.</textarea>
+          </div>
+        </div>
+
+        <!-- STEP 2: RECIPIENT ROSTER INGESTION -->
+        <div class="glass-panel rounded-2xl p-6 border border-slate-800/80 shadow-xl">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-slate-800 gap-3">
+            <div class="flex items-center space-x-3">
+              <span class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 font-bold flex items-center justify-center text-sm border border-amber-500/30">2</span>
+              <div>
+                <h2 class="text-lg font-semibold text-white">Recipient Roster Ingestion</h2>
+                <p class="text-xs text-slate-400">Choose your preferred ingestion method below.</p>
+              </div>
+            </div>
+
+            <!-- Ingestion Mode Tabs -->
+            <div class="flex items-center space-x-1.5 bg-slate-950/80 p-1 rounded-xl border border-slate-800">
+              <button type="button" id="mode-csv-btn" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border bg-amber-600/20 text-amber-300 border-amber-500/50 shadow-sm">
+                CSV Upload
+              </button>
+              <button type="button" id="mode-table-btn" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border bg-slate-800/60 text-slate-400 border-slate-700/50 hover:text-slate-200">
+                Manual Grid
+              </button>
+              <button type="button" id="mode-json-btn" class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border bg-slate-800/60 text-slate-400 border-slate-700/50 hover:text-slate-200">
+                JSON Raw
+              </button>
+            </div>
+          </div>
+
+          <!-- MODE 1: CSV UPLOAD -->
+          <div id="mode-csv-section" class="mt-6 space-y-4">
+            <div id="csv-dropzone" class="border-2 border-dashed border-slate-700 hover:border-amber-500/80 bg-slate-900/40 rounded-2xl p-8 text-center cursor-pointer transition-all group">
+              <input type="file" id="csv-file-input" accept=".csv" class="hidden" />
+              <div class="mx-auto w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform duration-200 mb-3 border border-amber-500/20">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
+              </div>
+              <h3 class="text-sm font-semibold text-slate-200 group-hover:text-amber-300 transition-colors">Click to upload or drag and drop your CSV roster</h3>
+              <p class="text-xs text-slate-400 mt-1">Supports headers: <span class="font-mono text-slate-300">name, email, identifier</span></p>
+            </div>
+
+            <!-- CSV Status Preview Card -->
+            <div id="csv-preview-container" class="hidden p-4 rounded-xl bg-slate-900/90 border border-emerald-500/30 flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <div>
+                  <div class="text-sm font-semibold text-emerald-300" id="csv-summary-text">0 recipients loaded</div>
+                  <div class="text-xs text-slate-400">CSV validated and prepared for batch ingestion.</div>
+                </div>
+              </div>
+              <button type="button" id="download-sample-csv-btn" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 bg-slate-800 hover:bg-slate-700 transition-colors">
+                Download Sample CSV
+              </button>
+            </div>
+
+            <div class="flex justify-end">
+              <button type="button" id="download-sample-csv-btn" class="text-xs text-amber-400 hover:text-amber-300 underline font-medium">
+                Need a template? Download Sample CSV
+              </button>
+            </div>
+          </div>
+
+          <!-- MODE 2: MANUAL TABLE GRID -->
+          <div id="mode-table-section" class="mt-6 space-y-4 hidden">
+            <div class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-900/50">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="border-b border-slate-800 bg-slate-900 text-slate-400 text-xs uppercase font-semibold">
+                    <th class="p-3">Full Name <span class="text-amber-400">*</span></th>
+                    <th class="p-3">Email Address (Optional)</th>
+                    <th class="p-3">Student / Roll ID (Optional)</th>
+                    <th class="p-3 w-12 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="recipients-table-body">
+                  <!-- Dynamic rows will populate here -->
+                </tbody>
+              </table>
+            </div>
+
+            <button type="button" id="add-table-row-btn" class="px-4 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center space-x-2 transition-colors">
+              <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+              <span>Add Recipient Row</span>
+            </button>
+          </div>
+
+          <!-- MODE 3: RAW JSON EDITOR -->
+          <div id="mode-json-section" class="mt-6 space-y-4 hidden">
+            <div class="space-y-1.5">
+              <label for="json-editor" class="text-xs font-semibold uppercase tracking-wider text-slate-300">Recipient JSON Array</label>
+              <textarea id="json-editor" rows="8" placeholder='[\n  {\n    "name": "Alex Johnson",\n    "email": "alex@example.com",\n    "identifier": "ENG-2026-001"\n  }\n]' class="w-full p-4 font-mono text-xs rounded-xl bg-slate-900/90 border border-slate-700 text-amber-300 focus:border-amber-500 focus:outline-none leading-relaxed"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUBMIT BUTTON -->
+        <div class="flex items-center justify-end pt-4">
+          <button type="submit" id="submit-job-btn" class="px-8 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold text-base transition-all duration-200 shadow-xl shadow-amber-500/20 hover:shadow-amber-500/40 hover:scale-[1.01] active:scale-[0.99] flex items-center space-x-2">
+            <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            <span>Generate Certificates</span>
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: REAL-TIME JOB MONITOR -->
+    <!-- ========================================== -->
+    <section id="tab-monitor" class="space-y-6 hidden">
+
+      <!-- EMPTY STATE (NO ACTIVE JOB) -->
+      <div id="monitor-empty-state" class="glass-panel rounded-2xl p-12 text-center border border-slate-800">
+        <div class="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-800 text-slate-500 flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+        </div>
+        <h3 class="text-lg font-bold text-slate-200 font-display">No Active Batch Selected</h3>
+        <p class="text-sm text-slate-400 max-w-md mx-auto mt-1 mb-6">Create a new generation batch or pick an existing job from the Batch History tab to monitor live progress.</p>
+        <button type="button" id="monitor-new-batch-btn" class="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition-colors shadow-lg shadow-amber-500/20">
+          Create New Batch
+        </button>
+      </div>
+
+      <!-- ACTIVE STATE (MONITORING JOB) -->
+      <div id="monitor-active-state" class="space-y-6 hidden">
+
+        <!-- JOB HERO METRICS -->
+        <div class="glass-panel rounded-2xl p-6 border border-slate-800 space-y-6 shadow-xl">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-800 pb-5">
+            <div>
+              <div class="flex items-center space-x-3">
+                <h2 id="monitor-job-title" class="text-xl sm:text-2xl font-bold text-white font-display">Cloud Architecture Bootcamp</h2>
+                <span id="monitor-status-badge" class="px-3 py-1 rounded-full text-xs font-semibold border bg-amber-950/60 text-amber-300 border-amber-500/30 animate-pulse">PROCESSING</span>
+              </div>
+              <div class="text-xs text-slate-400 mt-1 flex flex-wrap items-center gap-2">
+                <span id="monitor-job-event">Annual Tech Summit</span>
+                <span>•</span>
+                <span id="monitor-job-org">Tech Institute</span>
+                <span>•</span>
+                <span id="monitor-job-id" class="font-mono text-slate-500">ID: job_...</span>
+              </div>
+            </div>
+
+            <!-- Header Actions -->
+            <div class="flex items-center space-x-3">
+              <button id="monitor-download-zip-btn" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center space-x-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                <span>Download All (ZIP)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Progress Bar & Percentage -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-xs font-semibold">
+              <span class="text-slate-300 uppercase tracking-wider">Overall Progress</span>
+              <span id="monitor-progress-percentage" class="text-amber-400 font-mono text-sm">0%</span>
+            </div>
+            <div class="w-full bg-slate-900 rounded-full h-3 overflow-hidden border border-slate-800">
+              <div id="monitor-progress-bar" class="bg-gradient-to-r from-amber-500 to-amber-300 h-full rounded-full transition-all duration-300 progress-shimmer" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <!-- Stat Counters -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800">
+              <div class="text-xs uppercase font-semibold text-slate-400">Total Count</div>
+              <div id="monitor-stat-total" class="text-2xl font-bold text-white mt-1 font-mono">0</div>
+            </div>
+            <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800">
+              <div class="text-xs uppercase font-semibold text-slate-400">Processed</div>
+              <div id="monitor-stat-processed" class="text-2xl font-bold text-slate-200 mt-1 font-mono">0</div>
+            </div>
+            <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800">
+              <div class="text-xs uppercase font-semibold text-emerald-400">Succeeded</div>
+              <div id="monitor-stat-success" class="text-2xl font-bold text-emerald-400 mt-1 font-mono">0</div>
+            </div>
+            <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800">
+              <div class="text-xs uppercase font-semibold text-rose-400">Failed</div>
+              <div id="monitor-stat-failed" class="text-2xl font-bold text-rose-400 mt-1 font-mono">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CERTIFICATE ITEMS TABLE -->
+        <div class="glass-panel rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+
+          <!-- Table Controls (Filter & Search) -->
+          <div class="p-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-900/40">
+            <!-- Filter Pills -->
+            <div class="flex items-center space-x-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+              <button type="button" id="filter-cert-all" class="px-3 py-1 rounded-lg text-xs font-medium bg-slate-700 text-white shadow-sm transition-all">All</button>
+              <button type="button" id="filter-cert-success" class="px-3 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 transition-all">Success</button>
+              <button type="button" id="filter-cert-failed" class="px-3 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 transition-all">Failed</button>
+            </div>
+
+            <!-- Search Field -->
+            <div class="relative w-full sm:w-64">
+              <input type="text" id="cert-search-input" placeholder="Search recipient or code..." class="w-full pl-9 pr-3.5 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 focus:border-amber-500 focus:outline-none" />
+              <svg class="w-4 h-4 text-slate-500 absolute left-3 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+          </div>
+
+          <!-- Items Table Body -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-slate-800 bg-slate-900/70 text-slate-400 text-xs uppercase font-semibold">
+                  <th class="p-3.5">Recipient Details</th>
+                  <th class="p-3.5">Certificate Code</th>
+                  <th class="p-3.5">Status</th>
+                  <th class="p-3.5">Size</th>
+                  <th class="p-3.5 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="monitor-cert-table-body">
+                <!-- Dynamically updated certificate rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: BATCH JOB HISTORY -->
+    <!-- ========================================== -->
+    <section id="tab-history" class="space-y-6 hidden">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight font-display">Batch Generation History</h1>
+          <p class="text-slate-400 text-sm mt-1">Audit past certificate generation runs, download historical archives, and inspect batch results.</p>
+        </div>
+        <button type="button" id="history-refresh-btn" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 flex items-center space-x-2 transition-colors">
+          <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+          <span>Refresh History</span>
+        </button>
+      </div>
+
+      <!-- History Table Container -->
+      <div class="glass-panel rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
+
+        <!-- Controls Filter Header -->
+        <div class="p-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-900/40">
+          <div class="flex items-center space-x-3">
+            <select id="history-filter-status" class="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:border-amber-500 focus:outline-none">
+              <option value="">All Statuses</option>
+              <option value="COMPLETED">Completed</option>
+              <option value="PROCESSING">Processing</option>
+              <option value="PARTIALLY_COMPLETED">Partially Completed</option>
+              <option value="FAILED">Failed</option>
+            </select>
+          </div>
+
+          <div class="relative w-full sm:w-72">
+            <input type="text" id="history-search-input" placeholder="Search by title, event, or job ID..." class="w-full pl-9 pr-3.5 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-100 focus:border-amber-500 focus:outline-none" />
+            <svg class="w-4 h-4 text-slate-500 absolute left-3 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          </div>
+        </div>
+
+        <!-- History Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-slate-800 bg-slate-900/70 text-slate-400 text-xs uppercase font-semibold">
+                <th class="p-3.5">Job / Event Details</th>
+                <th class="p-3.5">Status</th>
+                <th class="p-3.5">Progress & Counts</th>
+                <th class="p-3.5">Created At</th>
+                <th class="p-3.5 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="history-table-body">
+              <!-- Dynamically populated past jobs -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Footer -->
+        <div class="p-4 border-t border-slate-800 flex items-center justify-between bg-slate-900/40 text-xs text-slate-400">
+          <span id="history-page-info">Page 1</span>
+          <div class="flex items-center space-x-2">
+            <button id="history-prev-btn" disabled class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">Previous</button>
+            <button id="history-next-btn" disabled class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">Next</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 4: PUBLIC CERTIFICATE VERIFIER -->
+    <!-- ========================================== -->
+    <section id="tab-verify" class="space-y-8 hidden">
+      <div class="max-w-2xl mx-auto text-center space-y-2">
+        <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-3">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-white tracking-tight font-display">Certificate Verification Portal</h1>
+        <p class="text-slate-400 text-sm">Verify the authenticity and tamper-evidence of any issued credential using its unique certificate verification code.</p>
+      </div>
+
+      <!-- Verification Form -->
+      <form id="verify-form" class="max-w-xl mx-auto">
+        <div class="flex items-center space-x-2 bg-slate-900/90 p-2 rounded-2xl border border-slate-700 shadow-2xl focus-within:border-amber-500 transition-colors">
+          <input type="text" id="verify-code-input" required placeholder="Enter code (e.g. CERT-2026-XXXX-XXXX)" class="flex-1 px-4 py-2.5 bg-transparent text-slate-100 text-sm font-mono tracking-wide placeholder:font-sans focus:outline-none" />
+          <button type="submit" id="verify-submit-btn" class="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition-colors flex items-center space-x-1.5 shadow-md">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            <span>Verify</span>
+          </button>
+        </div>
+      </form>
+
+      <!-- IDLE STATE -->
+      <div id="verify-idle-container" class="max-w-md mx-auto text-center p-8 text-slate-500 text-xs">
+        Each certificate issued by CertiPulse contains a unique alphanumeric code and SHA-256 integrity hash verifiable against the cryptographic ledger.
+      </div>
+
+      <!-- ERROR STATE -->
+      <div id="verify-error-container" class="max-w-md mx-auto p-4 rounded-2xl bg-rose-950/40 border border-rose-500/30 text-rose-300 text-sm text-center hidden">
+        <div id="verify-error-message">Certificate not found or invalid.</div>
+      </div>
+
+      <!-- VERIFIED CREDENTIAL CARD -->
+      <div id="verify-result-container" class="max-w-2xl mx-auto glass-panel rounded-3xl p-8 border border-amber-500/30 shadow-2xl space-y-6 hidden relative overflow-hidden">
+
+        <!-- Top Verified Seal -->
+        <div class="flex items-center justify-between border-b border-slate-800 pb-5">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+            </div>
+            <div>
+              <span class="text-xs uppercase font-bold tracking-widest text-emerald-400">Authentic Credential</span>
+              <h3 class="text-lg font-bold text-white">Verified Certificate Record</h3>
+            </div>
+          </div>
+
+          <div class="text-right">
+            <span id="res-cert-code" class="px-3 py-1 rounded-full font-mono text-xs font-semibold bg-amber-500/10 text-amber-300 border border-amber-500/30">CERT-XXXX</span>
+          </div>
+        </div>
+
+        <!-- Recipient & Event Details -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
+            <div class="text-xs uppercase font-semibold text-slate-400">Recipient Name</div>
+            <div id="res-recipient-name" class="text-base font-bold text-slate-100 mt-1">Jane Doe</div>
+            <div id="res-recipient-email" class="text-xs text-slate-400 mt-0.5">jane@example.com</div>
+            <div id="res-recipient-id" class="text-xs font-mono text-slate-500 mt-0.5">ID: STU-101</div>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
+            <div class="text-xs uppercase font-semibold text-slate-400">Event / Recognition</div>
+            <div id="res-cert-title" class="text-base font-bold text-slate-100 mt-1">Certificate of Completion</div>
+            <div id="res-event-name" class="text-xs text-amber-300 mt-0.5 font-medium">Cloud Architecture Summit</div>
+            <div id="res-org-name" class="text-xs text-slate-400 mt-0.5">Global Tech Academy</div>
+          </div>
+        </div>
+
+        <!-- Issue & Signatory Info -->
+        <div class="grid grid-cols-2 gap-4 text-xs">
+          <div>
+            <span class="text-slate-400 uppercase font-semibold">Issued Date</span>
+            <div id="res-issue-date" class="font-medium text-slate-200 mt-0.5">October 8, 2026</div>
+          </div>
+          <div>
+            <span class="text-slate-400 uppercase font-semibold">Authorized Signatory</span>
+            <div id="res-issuer-name" class="font-medium text-slate-200 mt-0.5">Dr. Agamya Rathour</div>
+            <div id="res-issuer-title" class="text-slate-500 text-[11px]">Chief Technology Officer</div>
+          </div>
+        </div>
+
+        <!-- Description Paragraph -->
+        <div id="res-desc" class="p-4 rounded-xl bg-slate-900/40 text-xs text-slate-300 border border-slate-800/80 leading-relaxed italic">
+          "In recognition of successful participation and dedicated commitment to technical excellence."
+        </div>
+
+        <!-- Cryptographic Verification SHA-256 -->
+        <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-1">
+          <div class="flex items-center justify-between text-[11px]">
+            <span class="text-slate-400 font-medium">Cryptographic Ledger SHA-256 Hash</span>
+            <button type="button" id="res-copy-hash-btn" class="text-amber-400 hover:text-amber-300 font-medium flex items-center space-x-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+              <span>Copy</span>
+            </button>
+          </div>
+          <div id="res-verify-hash" class="font-mono text-[11px] text-slate-400 break-all">
+            e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+          </div>
+        </div>
+
+        <!-- Download Action -->
+        <div class="pt-2 flex justify-end">
+          <a id="res-download-pdf-btn" href="#" download class="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm transition-colors shadow-lg flex items-center space-x-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            <span>Download Official Certificate PDF</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- PDF PREVIEW MODAL -->
+  <div id="pdf-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-4 sm:p-6">
+    <div class="glass-panel-elevated w-full max-w-5xl h-[90vh] rounded-2xl border border-slate-700 shadow-2xl flex flex-col overflow-hidden">
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/90">
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+          </div>
+          <h3 id="pdf-modal-title" class="text-base font-bold text-slate-100 font-display">Certificate Preview</h3>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <a id="pdf-modal-download" href="#" download class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center space-x-1.5 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            <span>Download</span>
+          </a>
+          <button id="pdf-modal-close" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Body (Iframe) -->
+      <div class="flex-1 bg-slate-950 p-2 relative">
+        <iframe id="pdf-modal-frame" src="about:blank" class="w-full h-full rounded-xl border border-slate-800 bg-white" title="PDF Document Viewer"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-3 pointer-events-none"></div>
+
+  <!-- Main Modular JS Application -->
+  <script type="module" src="/static/js/app.js"></script>
+</body>
+</html>
